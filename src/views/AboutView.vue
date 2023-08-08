@@ -81,6 +81,7 @@ export default {
           },
         },
       },
+
       animated: {
         openingAngle: 0.02 * Math.PI,
         flapAngles: {
@@ -115,7 +116,9 @@ export default {
       rayCaster,
       mouse,
       copyright,
-      copyright2;
+      copyright2,
+      copyright3,
+      copyright4;
     gsap.registerPlugin(ScrollTrigger);
 
     // const { width, height } = useWindowSize();
@@ -170,6 +173,7 @@ export default {
             Math.floor(5 * sideWidth),
             Math.floor(0.2 * box.params.depth)
           );
+
           const flapPlaneGeometry = new THREE.PlaneGeometry(
             flapWidth,
             flapHeight,
@@ -202,6 +206,8 @@ export default {
           box.els[half][side].top.geometry = topGeometry;
           box.els[half][side].side.geometry = sideGeometry;
           box.els[half][side].bottom.geometry = bottomGeometry;
+          copyright3.geometry = sideGeometry;
+          copyright4.geometry = sideGeometry;
 
           box.els[half][side].top.position.y = 0.5 * box.params.depth;
           box.els[half][side].bottom.position.y = -0.5 * box.params.depth;
@@ -220,6 +226,7 @@ export default {
             0.01 * Math.sin(box.params.fluteFreq * v)
         )
       );
+
       geometriesToMerge.push(
         getLayerGeometry(
           (v) =>
@@ -277,6 +284,7 @@ export default {
 
     function createCopyright() {
       const canvas = document.createElement("canvas");
+      const canvas1 = document.createElement("canvas");
       canvas.width = box.params.copyrightSize[0] * 10;
       canvas.height = box.params.copyrightSize[1] * 10;
       const planeGeometry = new THREE.PlaneGeometry(
@@ -285,16 +293,22 @@ export default {
       );
 
       const ctx = canvas.getContext("2d");
+      const ctx1 = canvas1.getContext("2d");
       // ctx.clearRect(0, 0, canvas.width, canvas.width);
       ctx.fillStyle = "#000000";
       ctx.font = "30px sans-serif";
       ctx.textAlign = "end";
       ctx.fillText("Rikkei", 135, 50);
-      // ctx.fillText("Rikkei2", canvas.width - 50, 70);
-
       ctx.lineWidth = 2;
 
+      ctx1.fillStyle = "#000000";
+      ctx1.font = "30px sans-serif";
+      ctx1.textAlign = "end";
+      ctx1.fillText("Rikkei2", canvas.width - 50, 90);
+      ctx1.lineWidth = 2;
+
       const texture = new THREE.CanvasTexture(canvas);
+      const texture2 = new THREE.CanvasTexture(canvas1);
       copyright = new THREE.Mesh(
         planeGeometry,
         new THREE.MeshBasicMaterial({
@@ -312,6 +326,22 @@ export default {
           opacity: 1,
         })
       );
+      copyright3 = new THREE.Mesh(
+        planeGeometry,
+        new THREE.MeshBasicMaterial({
+          map: texture2,
+          transparent: true,
+          opacity: 1,
+        })
+      );
+      copyright4 = new THREE.Mesh(
+        planeGeometry,
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 1,
+        })
+      );
       const texture1 = new THREE.TextureLoader().load("/images/earth.jpg");
       texture1.wrapS = THREE.RepeatWrapping;
       texture1.wrapT = THREE.RepeatWrapping;
@@ -319,6 +349,8 @@ export default {
 
       scene.add(copyright);
       scene.add(copyright2);
+      scene.add(copyright3);
+      scene.add(copyright4);
       // trackLinks();
     }
 
@@ -455,12 +487,21 @@ export default {
       box.els.frontHalf.width.side.position.x = 0.5 * box.params.length;
       box.els.backHalf.width.side.position.x = -0.5 * box.params.length;
 
+      copyright3.position.x = 0.5 * box.params.length;
+      copyright4.position.x = -0.5 * box.params.length;
+
       // rotate width-sides from 0 to 90 deg
       box.els.frontHalf.width.side.rotation.y = box.animated.openingAngle;
       box.els.backHalf.width.side.rotation.y = box.animated.openingAngle;
 
+      copyright3.position.y = box.animated.openingAngle;
+      copyright4.position.y = box.animated.openingAngle;
+
       // move length-sides to keep the box centered
       const cos = Math.cos(box.animated.openingAngle); // animates from 1 to 0
+      copyright3.position.x = -0.5 * cos * box.params.width;
+      copyright4.position.x = 0.5 * cos * box.params.width;
+
       box.els.frontHalf.length.side.position.x = -0.5 * cos * box.params.width;
       box.els.backHalf.length.side.position.x = 0.5 * cos * box.params.width;
 
@@ -468,6 +509,9 @@ export default {
       const sin = Math.sin(box.animated.openingAngle); // animates from 0 to 1
       box.els.frontHalf.length.side.position.z = 0.5 * sin * box.params.width;
       box.els.backHalf.length.side.position.z = -0.5 * sin * box.params.width;
+
+      copyright3.position.z = 0.5 * sin * box.params.width;
+      copyright4.position.z = -0.5 * sin * box.params.width;
 
       box.els.frontHalf.width.top.rotation.x =
         -box.animated.flapAngles.frontHalf.width.top;
@@ -493,14 +537,53 @@ export default {
       copyright.position.y -=
         0.5 * (box.params.depth - box.params.copyrightSize[1]);
       copyright.position.z += box.params.thickness;
+      console.log("boc", box.els.backHalf.length.side.position);
 
-      copyright2.position.copy(box.els.backHalf.length.side.position);
-      console.log("12", copyright2.position);
-      copyright2.position.x +=
+      copyright2.position.copy({
+        x: 0.5 * box.params.length - 0.5 * box.params.copyrightSize[0],
+        y: 0.5 * (box.params.depth - box.params.copyrightSize[1]),
+        z: -0.5 * sin * box.params.width,
+      });
+      copyright2.rotation.x = 1 * Math.PI;
+      copyright2.rotation.z = 1 * Math.PI;
+
+      copyright2.position.x -=
         0.5 * box.params.length - 0.5 * box.params.copyrightSize[0];
       copyright2.position.y -=
         0.5 * (box.params.depth - box.params.copyrightSize[1]);
-      copyright2.position.z += box.params.thickness;
+      copyright2.position.z -= box.params.thickness;
+
+      // ------------------------
+
+      // copyright3.position.copy({
+      //   x: 0.5 * sin * box.params.length + box.params.copyrightSize[0],
+      //   y: 0.5 * box.params.depth - 0.5 * box.params.copyrightSize[1],
+      //   z: -0.5 * sin * box.params.width,
+      // });
+      // copyright3.rotation.x = 1 * Math.PI;
+      // copyright3.rotation.z = 1 * Math.PI;
+      // copyright3.rotation.y = 0.5 * Math.PI;
+
+      // copyright3.position.x +=
+      //   1 * cos * box.params.width - box.params.copyrightSize[0] + 1;
+      // copyright3.position.y -=
+      //   0.5 * (box.params.depth - box.params.copyrightSize[1]);
+      // copyright3.position.z -= box.params.thickness - 12;
+
+      // copyright3.position.copy({
+      //   x: -0.5 * sin * box.params.width,
+      //   y: 0.5 * (box.params.depth - box.params.copyrightSize[1]),
+      //   z: 0.5 * box.params.length - 0.5 * box.params.copyrightSize[0],
+      // });
+      // copyright3.rotation.x = -0.5 * Math.PI;
+      // copyright3.rotation.y = -0.5 * Math.PI;
+      // copyright3.rotation.z = -0.5 * Math.PI;
+
+      // copyright3.position.x -= box.params.thickness;
+      // copyright3.position.y -=
+      //   0.5 * (box.params.depth - box.params.copyrightSize[1]);
+      // copyright3.position.z -=
+      //   0.5 * box.params.length - 0.5 * box.params.copyrightSize[0];
     }
 
     // End of animation
@@ -662,6 +745,10 @@ export default {
 
       scene.add(box.els.group);
       setGeometryHierarchy();
+      const texture = new THREE.TextureLoader().load("/images/earth1.avif");
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(4, 4);
 
       const material = new THREE.MeshStandardMaterial({
         map: new THREE.TextureLoader().load("/images/earth1.avif"),
